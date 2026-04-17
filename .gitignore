@@ -1,0 +1,36 @@
+# --- Dependencies ---
+node_modules/
+**/node_modules/
+
+# --- Environment Secrets (The actual keys) ---
+.env
+**/.env
+.env.local
+.env.*.local
+
+# --- Firebase & Google Cloud Secrets ---
+# This blocks the sensitive JSON files specifically
+**/*.json
+!package.json
+!package-lock.json
+!**/nodemon.json
+node_modules/
+**/node_modules/
+.env
+**/.env
+serviceAccountkey.json
+**/serviceAccountkey.json
+*.json
+!package.json
+!package-lock.json
+!**/nodemon.json
+dist/
+
+# --- OS & Logs ---
+.DS_Store
+Thumbs.db
+*.log
+
+# --- Build Outputs ---
+dist/
+build/
