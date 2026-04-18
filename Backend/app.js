@@ -7,6 +7,7 @@ const { createClient } = require('redis');
 const app = express();
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 const redisClient = createClient();
 redisClient.on('error', (err) => console.log('Redis Error', err));
@@ -19,6 +20,12 @@ redisClient.on('error', (err) => console.log('Redis Error', err));
     }
 })();
 
+
+//Local routes
+const reportRoutes = require('./routes/allRoutes');
+app.use('/api/reports', reportRoutes);
+
+//Server Establishment
 mongoose.connect(process.env.MONGO_LINK)
     .then(() => console.log("Connected to MongoDB Atlas"))
     .catch(err => console.log("MongoDB Connection Error:", err));
