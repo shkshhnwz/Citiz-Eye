@@ -2,6 +2,11 @@
 node_modules/
 **/node_modules/
 
+# Postman files
+*.postman_collection.json
+*.postman_environment.json
+Postman/
+
 # --- Environment Secrets (The actual keys) ---
 .env
 **/.env
