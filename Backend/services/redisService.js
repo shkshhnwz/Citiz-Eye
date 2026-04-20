@@ -2,7 +2,10 @@ require('dotenv').config(); // Essential to read your HF_TOKEN
 const { createClient } = require('redis');
 const axios = require('axios');
 
-// Initialize Redis Client ONCE (Outside the function)
+const { HfInference } = require('@huggingface/inference');
+// Initialize the client with your token
+const hf = new HfInference(process.env.HF_TOKEN.trim());
+
 const redisClient = createClient();
 redisClient.on('error', (err) => console.log('Redis Client Error', err));
 
@@ -12,38 +15,57 @@ redisClient.on('error', (err) => console.log('Redis Client Error', err));
     console.log("Connected to Redis in WSL");
 })();
 
-const HF_MODEL_URL = "https://api-inference.huggingface.co/models/google/vit-base-patch16-224";
 
-/**
- * Optimized Rate Limiter
- */
+
 async function checkRateLimit(userId) {
     const key = `limit:${userId}`;
     const count = await redisClient.incr(key);
-    
+
     if (count === 1) {
-        await redisClient.expire(key, 3600); 
+        await redisClient.expire(key, 3600);
     }
-    
-    return count <= 5; 
+
+    return count <= 5;
 }
 
-const classifyCivicIssue = async (imageBuffer) => {
+const classifyCivicIssue = async (imageInput) => {
     try {
-        const response = await axios.post(HF_MODEL_URL, imageBuffer, {
-            headers: {
-                Authorization: `Bearer ${process.env.HF_TOKEN}`,
-                "Content-Type": "application/octet-stream",
-            },
+        let blobData;
+        if (imageInput && imageInput.path) {
+            // Read local file uploaded via multer
+            const fs = require('fs');
+            const buffer = fs.readFileSync(imageInput.path);
+            blobData = new Blob([buffer]);
+        } else if (typeof imageInput === 'string' && imageInput.trim() !== '') {
+            // Fetch from URL
+            const url = imageInput.trim();
+            const imageResponse = await fetch(url, {
+                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
+            });
+            if (!imageResponse.ok) {
+                throw new Error(`Failed to fetch image data: ${imageResponse.statusText}`);
+            }
+            blobData = await imageResponse.blob();
+        } else {
+            throw new Error("No image data provided for AI classification.");
+        }
+
+        // 2. Use the official library method
+        const result = await hf.imageClassification({
+            data: blobData,
+            model: "apple/mobilevit-xx-small",
         });
 
-        return response.data;
+        console.log("AI Result:", result[0]);
+
+        return {
+            label: result[0].label,
+            score: result[0].score
+        };
+
     } catch (error) {
-        if (error.response?.status === 503) {
-            return { error: "AI Model is loading, please try again." };
-        }
-        throw new Error("AI Processing Failed");
+        console.error("HF Library Error Details:", error);
+        return { label: "unclassified", score: 0 };
     }
 };
-
 module.exports = { checkRateLimit, classifyCivicIssue };

@@ -1,4 +1,9 @@
 require('dotenv').config();
+require('dotenv').config();
+console.log("--- ENV DEBUG START ---");
+console.log("HF_TOKEN length:", process.env.HF_TOKEN ? process.env.HF_TOKEN.length : "NOT FOUND");
+console.log("Current Directory:", __dirname);
+console.log("--- ENV DEBUG END ---");
 const express = require('express');
 const mongoose = require('mongoose');
 const { createClient } = require('redis');
