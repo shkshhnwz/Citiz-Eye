@@ -2,18 +2,25 @@ import './App.css'
 import { Routes, Route } from 'react-router-dom';
 import Navbar from "./components/mycomponents/navbar";
 import About from "./components/mycomponents/About";
+import Feed from "./components/mycomponents/Feed"; // 1. Import the Feed component
 
 function App() {
   return (
-    <>
+    <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
-      <main className="flex-1 flex flex-col">
+      <main className="flex-1">
         <Routes>
+          {/* 2. This makes the Feed show up at http://localhost:5173/ */}
+          <Route path="/" element={<Feed />} /> 
+          
+          {/* 3. This makes About show up at http://localhost:5173/about */}
           <Route path="/about" element={<About />} />
-          {/* Add other routes here later */}
+          
+          {/* 4. Future Route for your form */}
+          <Route path="/report" element={<div>Report Form Coming Soon</div>} />
         </Routes>
       </main>
-    </>
+    </div>
   )
 }
 

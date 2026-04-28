@@ -29,8 +29,8 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl transition-all duration-300">
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-8">
-        
-        {/* Logo Section */}
+
+
         <Link to="/" className="flex items-center gap-2.5 group transition-transform hover:scale-[1.02]">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground shadow-inner">
             <Eye className="h-5 w-5" />
@@ -40,7 +40,7 @@ export default function Navbar() {
           </span>
         </Link>
 
-        {/* Desktop Navigation */}
+
         <div className="hidden md:flex flex-1 items-center justify-center">
           <NavigationMenu>
             <NavigationMenuList className="gap-1">
@@ -49,12 +49,11 @@ export default function Navbar() {
                 return (
                   <NavigationMenuItem key={item.title}>
                     <Link to={item.href}>
-                      <NavigationMenuLink 
-                        className={`${navigationMenuTriggerStyle()} bg-transparent text-sm font-medium transition-colors ${
-                          isActive 
-                            ? "text-primary bg-primary/5" 
+                      <NavigationMenuLink
+                        className={`${navigationMenuTriggerStyle()} bg-transparent text-sm font-medium transition-colors ${isActive
+                            ? "text-primary bg-primary/5"
                             : "text-muted-foreground hover:text-primary hover:bg-primary/5"
-                        }`}
+                          }`}
                       >
                         {item.title}
                       </NavigationMenuLink>
@@ -66,7 +65,7 @@ export default function Navbar() {
           </NavigationMenu>
         </div>
 
-        {/* Action Buttons (Desktop) */}
+
         <div className="hidden md:flex items-center gap-3">
           <Link to="/login">
             <Button variant="ghost" className="text-muted-foreground hover:text-foreground font-medium rounded-full px-5">
@@ -80,7 +79,7 @@ export default function Navbar() {
           </Link>
         </div>
 
-        {/* Mobile Navigation */}
+
         <div className="flex md:hidden items-center gap-3">
           <Link to="/report">
             <Button size="sm" className="rounded-full shadow-md shadow-primary/20">Report</Button>
