@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import Navbar from "./components/mycomponents/navbar";
 import About from "./components/mycomponents/About";
 import Feed from "./components/mycomponents/Feed"; // 1. Import the Feed component
+import ReportForm from "./components/mycomponents/Report";
 
 function App() {
   return (
@@ -17,7 +18,7 @@ function App() {
           <Route path="/about" element={<About />} />
           
           {/* 4. Future Route for your form */}
-          <Route path="/report" element={<div>Report Form Coming Soon</div>} />
+          <Route path="/report" element={<ReportForm />} />
         </Routes>
       </main>
     </div>

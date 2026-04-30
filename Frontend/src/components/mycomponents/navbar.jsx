@@ -48,16 +48,17 @@ export default function Navbar() {
                 const isActive = location.pathname === item.href;
                 return (
                   <NavigationMenuItem key={item.title}>
-                    <Link to={item.href}>
-                      <NavigationMenuLink
+
+                    <NavigationMenuLink render={
+                      <Link to={item.href}
                         className={`${navigationMenuTriggerStyle()} bg-transparent text-sm font-medium transition-colors ${isActive
-                            ? "text-primary bg-primary/5"
-                            : "text-muted-foreground hover:text-primary hover:bg-primary/5"
+                          ? "text-primary bg-primary/5"
+                          : "text-muted-foreground hover:text-primary hover:bg-primary/5"
                           }`}
-                      >
-                        {item.title}
-                      </NavigationMenuLink>
-                    </Link>
+                      />
+                    }>
+                      {item.title}
+                    </NavigationMenuLink>
                   </NavigationMenuItem>
                 );
               })}
@@ -85,26 +86,24 @@ export default function Navbar() {
             <Button size="sm" className="rounded-full shadow-md shadow-primary/20">Report</Button>
           </Link>
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="h-9 w-9 rounded-full border-border/50 bg-background/50 backdrop-blur-sm">
-                <Menu className="h-4 w-4 text-foreground" />
-                <span className="sr-only">Toggle menu</span>
-              </Button>
+            <DropdownMenuTrigger render={
+              <Button variant="outline" size="icon" className="h-9 w-9 rounded-full border-border/50 bg-background/50 backdrop-blur-sm" />
+            }>
+              <Menu className="h-4 w-4 text-foreground" />
+              <span className="sr-only">Toggle menu</span>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-52 mt-2 rounded-xl p-2 shadow-xl shadow-black/5">
               {navLinks.map((item) => {
                 const isActive = location.pathname === item.href;
                 return (
-                  <DropdownMenuItem key={item.title} asChild className={`cursor-pointer rounded-lg mb-1 ${isActive ? "bg-primary/5 text-primary" : ""}`}>
-                    <Link to={item.href} className="w-full text-sm font-medium">
-                      {item.title}
-                    </Link>
+                  <DropdownMenuItem key={item.title} className={`cursor-pointer rounded-lg mb-1 ${isActive ? "bg-primary/5 text-primary" : ""}`} render={<Link to={item.href} className="w-full text-sm font-medium" />}>
+                    {item.title}
                   </DropdownMenuItem>
                 );
               })}
               <DropdownMenuSeparator className="my-2 opacity-50" />
-              <DropdownMenuItem asChild className="cursor-pointer rounded-lg">
-                <Link to="/login" className="w-full text-sm font-medium text-muted-foreground">Log in</Link>
+              <DropdownMenuItem className="cursor-pointer rounded-lg" render={<Link to="/login" className="w-full text-sm font-medium text-muted-foreground" />}>
+                Log in
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
