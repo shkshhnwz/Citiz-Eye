@@ -1,14 +1,6 @@
 require('dotenv').config();
 require('dotenv').config();
 
-
-//Debug
-console.log("--- ENV DEBUG START ---");
-console.log("HF_TOKEN length:", process.env.HF_TOKEN ? process.env.HF_TOKEN.length : "NOT FOUND");
-console.log("Current Directory:", __dirname);
-console.log("--- ENV DEBUG END ---");
-
-
 //dependencies
 const cors = require('cors');
 const express = require('express');
@@ -22,6 +14,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+//redis rate limiting
 const redisClient = createClient();
 redisClient.on('error', (err) => console.log('Redis Error', err));
 (async () => {

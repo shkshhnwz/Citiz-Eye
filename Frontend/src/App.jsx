@@ -4,6 +4,8 @@ import Navbar from "./components/mycomponents/navbar";
 import About from "./components/mycomponents/About";
 import Feed from "./components/mycomponents/Feed"; // 1. Import the Feed component
 import ReportForm from "./components/mycomponents/Report";
+import HistoryOfReports from './components/mycomponents/HistoryOfReports';
+import { LoginForm } from "./components/mycomponents/Loginpageform";
 
 function App() {
   return (
@@ -12,13 +14,15 @@ function App() {
       <main className="flex-1">
         <Routes>
           {/* 2. This makes the Feed show up at http://localhost:5173/ */}
-          <Route path="/" element={<Feed />} /> 
-          
+          <Route path="/" element={<Feed />} />
+
           {/* 3. This makes About show up at http://localhost:5173/about */}
           <Route path="/about" element={<About />} />
-          
+
           {/* 4. Future Route for your form */}
           <Route path="/report" element={<ReportForm />} />
+          <Route path="/history-of-reports" element={<HistoryOfReports />} />
+          <Route path="/login" element={<LoginForm />} />
         </Routes>
       </main>
     </div>
