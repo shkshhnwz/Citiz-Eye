@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Upload, X, MapPin, Loader2, CheckCircle2, FileImage, Link } from "lucide-react";
 import axios from "axios";
+import { auth } from "@/firebase/fireBaseConfig";
 
 
 const ReportForm = () => {
@@ -79,8 +80,18 @@ const ReportForm = () => {
         
         try {
             const API_URL = import.meta.env.VITE_API_URL;
+            const user = auth.currentUser;
+            if (!user) {
+                alert("You must be logged in to submit a report!");
+                setLoading(false);
+                return;
+            }
+            const token = await user.getIdToken();
             await axios.post(`${API_URL}/api/reports`, formData, {
-                headers: { "Content-Type": "multipart/form-data" },
+                headers: { 
+                    "Content-Type": "multipart/form-data",
+                    "Authorization": `Bearer ${token}`
+                },
             });
             // Reset after success
             setFile(null);

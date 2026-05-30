@@ -3,8 +3,9 @@ const { createClient } = require('redis');
 const axios = require('axios');
 
 const { HfInference } = require('@huggingface/inference');
-// Initialize the client with your token
-const hf = new HfInference(process.env.HF_TOKEN.trim());
+// Initialize the client with your token safely
+const hfToken = process.env.HF_TOKEN ? process.env.HF_TOKEN.trim() : '';
+const hf = new HfInference(hfToken);
 
 const redisClient = createClient();
 redisClient.on('error', (err) => console.log('Redis Client Error', err));

@@ -1,7 +1,6 @@
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { error } = require('console');
 
 // Ensure uploads directory exists
 const uploadDir = path.join(__dirname, '..', 'uploads');
@@ -21,14 +20,14 @@ const storage = multer.diskStorage({
     }
 });
 
-const fileFilter = (req,file,cb)=>{
+const fileFilter = (req, file, cb) => {
     const allowedFileType = /jpeg|jpg|png/;
     const extname = allowedFileType.test(path.extname(file.originalname).toLowerCase());
-    const mimetypeCheck = allowedFileType.test(file.mimetypeCheck);
-    if(extname && mimetypeCheck){
-        return cb(null,true);
-    }else{
-        cb(new error("only jpeg,png,jpg files are allowed to upload"),false);
+    const mimetypeCheck = allowedFileType.test(file.mimetype);
+    if (extname && mimetypeCheck) {
+        return cb(null, true);
+    } else {
+        cb(new Error("only jpeg,png,jpg files are allowed to upload"), false);
     }
 }
 

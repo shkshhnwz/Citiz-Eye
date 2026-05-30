@@ -1,10 +1,12 @@
 import * as React from "react";
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
 import { Eye, Menu } from "lucide-react";
 
 import { auth } from "@/firebase/fireBaseConfig";
 import { onAuthStateChanged, signOut } from "firebase/auth";
+import axios from "axios";
 
 import {
   NavigationMenu,
@@ -26,7 +28,6 @@ import {
 import MiniNav from "./mininavbar";
 
 const navLinks = [
-  { title: "Report an Issue", href: "/report" },
   { title: "My Reports", href: "/my-reports" },
   { title: "About Us", href: "/about" },
 ];
@@ -36,24 +37,46 @@ export default function Navbar() {
 
   const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
     setMounted(true);
 
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
+      if (currentUser) {
+        try {
+          const API_URL = import.meta.env.VITE_API_URL;
+          const token = await currentUser.getIdToken();
+          const res = await axios.get(`${API_URL}/api/users/profile`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.data && res.data.role === "admin") {
+            setIsAdmin(true);
+          } else {
+            setIsAdmin(false);
+          }
+        } catch (err) {
+          console.error("Error fetching profile in navbar:", err);
+          setIsAdmin(false);
+        }
+      } else {
+        setIsAdmin(false);
+      }
     });
 
     return () => unsubscribe();
   }, []);
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error("Logout failed", error);
-    }
+  const handleLogout = () => {
+    setShowLogoutModal(true);
   };
+
+  const activeLinks = isAdmin 
+    ? [...navLinks, { title: "Admin Dashboard", href: "/admin" }] 
+    : navLinks;
 
   // Prevent hydration mismatch
   if (!mounted) {
@@ -85,7 +108,7 @@ export default function Navbar() {
         <div className="hidden md:flex flex-1 items-center justify-center">
           <NavigationMenu>
             <NavigationMenuList className="gap-1">
-              {navLinks.map((item) => {
+              {activeLinks.map((item) => {
                 const isActive = location.pathname === item.href;
 
                 return (
@@ -142,24 +165,22 @@ export default function Navbar() {
               align="end"
               className="w-52 mt-2 rounded-xl p-2 shadow-xl"
             >
-              {navLinks.map((item) => (
-                <DropdownMenuItem key={item.title} asChild>
-                  <Link to={item.href} className="w-full cursor-pointer">
-                    {item.title}
-                  </Link>
+              {activeLinks.map((item) => (
+                <DropdownMenuItem
+                  key={item.title}
+                  render={<Link to={item.href} className="w-full cursor-pointer" />}
+                >
+                  {item.title}
                 </DropdownMenuItem>
               ))}
 
               <DropdownMenuSeparator className="my-2" />
 
               {!user ? (
-                <DropdownMenuItem asChild>
-                  <Link
-                    to="/login"
-                    className="w-full cursor-pointer font-medium"
-                  >
-                    Log in
-                  </Link>
+                <DropdownMenuItem
+                  render={<Link to="/login" className="w-full cursor-pointer font-medium" />}
+                >
+                  Log in
                 </DropdownMenuItem>
               ) : (
                 <DropdownMenuItem
@@ -174,6 +195,41 @@ export default function Navbar() {
         </div>
 
       </div>
+
+      {showLogoutModal && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-md transition-opacity duration-300">
+          <div className="w-full max-w-sm p-6 bg-card border border-muted-foreground/20 rounded-2xl shadow-2xl backdrop-blur-md flex flex-col gap-4 transform transition-all duration-300 scale-100 animate-in fade-in zoom-in-95">
+            <h3 className="text-xl font-bold text-foreground">Confirm Logout</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Are you sure you want to log out of your CitizEye account?
+            </p>
+            <div className="flex gap-3 justify-end mt-2">
+              <Button
+                variant="ghost"
+                onClick={() => setShowLogoutModal(false)}
+                className="rounded-full px-5 hover:bg-muted text-foreground"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={async () => {
+                  try {
+                    setShowLogoutModal(false);
+                    await signOut(auth);
+                  } catch (error) {
+                    console.error("Logout failed", error);
+                  }
+                }}
+                className="rounded-full px-6 shadow-lg shadow-destructive/20 hover:shadow-destructive/30"
+              >
+                Log Out
+              </Button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </header>
   );
 }

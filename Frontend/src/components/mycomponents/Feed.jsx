@@ -15,7 +15,7 @@ const Feed = () => {
             try {
                 setLoading(true);
                 const response = await axios.get(`${API_BASE_URL}/api/reports`);
-                setReports(response.data);
+                setReports(Array.isArray(response.data) ? response.data : response.data.data || []);
                 setError(null);
             } catch (error) {
                 console.error("Fetch Error:", error);
@@ -59,8 +59,8 @@ const Feed = () => {
                             {/* Image with fallback logic */}
                             <div className="aspect-video w-full bg-muted relative">
                                 <img
-                                    src={`${API_BASE_URL}/${report.image}`}
-                                    alt={report.title || "Report Image"}
+                                    src={report.imageUrl ? (report.imageUrl.startsWith("http://") || report.imageUrl.startsWith("https://") ? report.imageUrl : `${API_BASE_URL}${report.imageUrl}`) : "/placeholder-image.jpg"}
+                                    alt={report.description || "Report Image"}
                                     className="object-cover w-full h-full"
                                     onError={(e) => { e.target.src = "/placeholder-image.jpg"; }} // Handle broken images
                                 />
@@ -71,7 +71,19 @@ const Feed = () => {
                                     <CardTitle className="text-lg font-semibold capitalize">
                                         {report.label || "Unclassified Issue"}
                                     </CardTitle>
-                                    <Badge variant={report.status === "resolved" ? "default" : "secondary"}>
+                                    <Badge 
+                                        className={`capitalize border ${
+                                            report.status === "resolved" 
+                                              ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" 
+                                              : report.status === "ongoing" 
+                                              ? "bg-indigo-500/10 text-indigo-500 border-indigo-500/20" 
+                                              : report.status === "verified" 
+                                              ? "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                                              : report.status === "rejected" 
+                                              ? "bg-destructive/10 text-destructive border-destructive/20" 
+                                              : "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                                        }`}
+                                    >
                                         {report.status}
                                     </Badge>
                                 </div>
@@ -82,7 +94,7 @@ const Feed = () => {
                                     {report.description}
                                 </p>
                                 <div className="text-xs font-medium text-primary bg-primary/5 p-2 rounded">
-                                    📍 {report.location || "Location not provided"}
+                                    📍 {report.location?.address || "Location not provided"}
                                 </div>
                             </CardContent>
                         </Card>

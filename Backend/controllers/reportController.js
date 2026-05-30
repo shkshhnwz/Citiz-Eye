@@ -60,7 +60,9 @@ exports.createReport = async (req, res, next) => {
 
 exports.getAllreports = async (req, res, next) => {
     try {
-        const reports = await Report.find().sort({ createdAt: -1 });
+        const reports = await Report.find({
+            "aiClassification.label": { $exists: true, $ne: "unclassified" }
+        }).sort({ createdAt: -1 });
         res.status(200).json({
             success: true,
             data: reports
@@ -84,5 +86,54 @@ exports.getReportById = async (req, res, next) => {
     } catch (error) {
         console.error("Error fetching report:", error);
         res.status(500).json({ message: "Server Error: Could not fetch report" });
+    }
+}
+
+exports.getMyReports = async (req, res, next) => {
+    try {
+        const userId = req.user.firebaseUid || req.user.uid;
+        const reports = await Report.find({ userId }).sort({ createdAt: -1 });
+        res.status(200).json(reports);
+    } catch (error) {
+        console.error("Error fetching my reports:", error);
+        res.status(500).json({ message: "Server Error: Could not fetch your reports" });
+    }
+}
+
+exports.getAllComplaintsForAdmin = async (req, res, next) => {
+    try {
+        const reports = await Report.find().sort({ createdAt: -1 });
+        res.status(200).json({
+            success: true,
+            data: reports
+        });
+    } catch (error) {
+        console.error("Error fetching admin reports:", error);
+        res.status(500).json({ message: "Server Error: Could not fetch reports" });
+    }
+}
+
+exports.updateReportStatus = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        if (!['pending', 'verified', 'ongoing', 'resolved', 'rejected'].includes(status)) {
+            return res.status(400).json({ success: false, message: "Invalid status value" });
+        }
+
+        const report = await Report.findByIdAndUpdate(id, { status }, { new: true });
+        if (!report) {
+            return res.status(404).json({ success: false, message: "Report not found" });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Report status updated successfully",
+            data: report
+        });
+    } catch (error) {
+        console.error("Error updating report status:", error);
+        res.status(500).json({ message: "Server Error: Could not update report status" });
     }
 }

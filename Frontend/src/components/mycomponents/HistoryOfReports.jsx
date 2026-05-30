@@ -3,6 +3,7 @@ import axios from "axios";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Clock, CheckCircle2, AlertCircle } from "lucide-react";
+import { auth } from "@/firebase/fireBaseConfig";
 
 export default function HistoryOfReports() {
   const [myReports, setMyReports] = useState([]);
@@ -12,10 +13,15 @@ export default function HistoryOfReports() {
     const fetchMyReports = async () => {
       try {
         const API_URL = import.meta.env.VITE_API_URL;
-        const response = await axios.get(`${API_URL}/api/reports/my-reports`);
-        setMyReports(response.data);
+        const user = auth.currentUser;
+        if (!user) return;
+        const token = await user.getIdToken();
+        const response = await axios.get(`${API_URL}/api/reports/my-reports`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setMyReports(Array.isArray(response.data) ? response.data : response.data.data || []);
       } catch (error) {
-        console.error("Error fetching history:", err);
+        console.error("Error fetching history:", error);
       } finally {
         setLoading(false)
       }
@@ -25,7 +31,7 @@ export default function HistoryOfReports() {
 
   if (loading) {
     return <div className="flex justify-center p-20">
-      <Loader className="animate-spin" />
+      <Loader2 className="animate-spin h-8 w-8 text-primary" />
     </div>
   }
   return (
@@ -39,9 +45,10 @@ export default function HistoryOfReports() {
               <CardContent className="p-0 flex flex-col md:flex-row">
                 {/* Small preview image */}
                 <img
-                  src={`${import.meta.env.VITE_API_URL}/${report.image}`}
+                  src={report.imageUrl ? (report.imageUrl.startsWith("http://") || report.imageUrl.startsWith("https://") ? report.imageUrl : `${import.meta.env.VITE_API_URL}${report.imageUrl}`) : "/placeholder-image.jpg"}
                   className="w-full md:w-48 h-32 object-cover"
                   alt="Issue"
+                  onError={(e) => { e.target.src = "/placeholder-image.jpg"; }}
                 />
 
                 <div className="p-4 flex-1 flex flex-col justify-between">
@@ -50,7 +57,19 @@ export default function HistoryOfReports() {
                       <h3 className="font-bold text-lg capitalize">{report.label || "Pending AI Analysis"}</h3>
                       <p className="text-sm text-muted-foreground line-clamp-1">{report.description}</p>
                     </div>
-                    <Badge variant={report.status === "resolved" ? "success" : "secondary"}>
+                    <Badge 
+                      className={`capitalize border ${
+                        report.status === "resolved" 
+                          ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" 
+                          : report.status === "ongoing" 
+                          ? "bg-indigo-500/10 text-indigo-500 border-indigo-500/20" 
+                          : report.status === "verified" 
+                          ? "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                          : report.status === "rejected" 
+                          ? "bg-destructive/10 text-destructive border-destructive/20" 
+                          : "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                      }`}
+                    >
                       {report.status}
                     </Badge>
                   </div>
@@ -61,7 +80,7 @@ export default function HistoryOfReports() {
                       {new Date(report.createdAt).toLocaleDateString()}
                     </span>
                     <span className="flex items-center gap-1 font-medium text-primary">
-                      📍 {report.location || "Coordinates Saved"}
+                      📍 {report.location?.address || "Coordinates Saved"}
                     </span>
                   </div>
                 </div>
