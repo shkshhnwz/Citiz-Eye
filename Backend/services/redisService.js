@@ -7,13 +7,19 @@ const { HfInference } = require('@huggingface/inference');
 const hfToken = process.env.HF_TOKEN ? process.env.HF_TOKEN.trim() : '';
 const hf = new HfInference(hfToken);
 
-const redisClient = createClient();
+const redisClient = createClient({
+    url: process.env.REDIS_URL || 'redis://localhost:6379'
+});
 redisClient.on('error', (err) => console.log('Redis Client Error', err));
 
 // Connect to Redis immediately
 (async () => {
-    await redisClient.connect();
-    console.log("Connected to Redis in WSL");
+    try {
+        await redisClient.connect();
+        console.log("Connected to Redis in service");
+    } catch (err) {
+        console.error("Redis Connection Failed in service", err);
+    }
 })();
 
 
