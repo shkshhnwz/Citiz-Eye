@@ -8,6 +8,7 @@ import HistoryOfReports from './components/mycomponents/HistoryOfReports';
 import { LoginForm } from "./components/mycomponents/Loginpageform";
 import AdminDashboard from "./components/mycomponents/adminDashboard";
 import Signup from "./components/mycomponents/Signup";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
@@ -17,11 +18,11 @@ function App() {
         <Routes>
           <Route path="/" element={<Feed />} />
           <Route path="/about" element={<About />} />
-          <Route path="/report" element={<ReportForm />} />
-          <Route path="/my-reports" element={<HistoryOfReports />} />
+          <Route path="/report" element={<ProtectedRoute><ReportForm /></ProtectedRoute>} />
+          <Route path="/my-reports" element={<ProtectedRoute><HistoryOfReports /></ProtectedRoute>} />
           <Route path="/login" element={<LoginForm />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
         </Routes>
       </main>
     </div>
