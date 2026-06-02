@@ -1,13 +1,24 @@
 const Report = require('../models/reports');
 const path = require('path');
 const fs = require('fs');
-const { classifyCivicIssue } = require('../services/redisService');
+const { checkRateLimit, classifyCivicIssue } = require('../services/redisService');
 const { sendEmail } = require('../services/emailService');
 const storageService = require('../services/storageService');
 
 exports.createReport = async (req, res, next) => {
 
     try {
+        const userId = req.user.uid;
+
+        // Enforce rate limiting (max 5 reports per hour)
+        const isAllowed = await checkRateLimit(userId);
+        if (!isAllowed) {
+            return res.status(429).json({
+                success: false,
+                message: "Rate limit exceeded or rate limiting service is unavailable. You can only submit up to 5 reports per hour."
+            });
+        }
+
         let parsedLocation = req.body.location;
         if (typeof parsedLocation === 'string') {
             try { parsedLocation = JSON.parse(parsedLocation); } catch (e) { }
@@ -15,7 +26,6 @@ exports.createReport = async (req, res, next) => {
 
         const description = req.body.description;
         const imageUrl = req.body.imageUrl;
-        const userId = req.user.uid;
 
         if (!req.file && !imageUrl) {
             return res.status(400).json({

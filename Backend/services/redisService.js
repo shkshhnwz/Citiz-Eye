@@ -30,8 +30,9 @@ if (process.env.REDIS_URL) {
 
 
 async function checkRateLimit(userId) {
-    if (!redisClient) {
-        return true; // Bypass rate limiting if Redis is not configured
+    if (!redisClient || !redisClient.isOpen) {
+        console.error("Redis is not connected. Rate limiting cannot be verified. Blocking request for safety.");
+        return false; // Fail closed: block request if rate limiting is not operational
     }
     try {
         const key = `limit:${userId}`;
@@ -44,7 +45,7 @@ async function checkRateLimit(userId) {
         return count <= 5;
     } catch (err) {
         console.error("Error checking rate limit in Redis:", err);
-        return true; // Fallback to allowing request on Redis error
+        return false; // Fail closed on error
     }
 }
 
