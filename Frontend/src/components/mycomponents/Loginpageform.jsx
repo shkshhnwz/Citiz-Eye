@@ -17,7 +17,8 @@ import axios from "axios";
 
 export function LoginForm() {
   const navigate = useNavigate();
-  
+  const API_URL = import.meta.env.VITE_API_URL;
+
   // 1. ALL HOOKS AT THE TOP
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,7 +31,7 @@ export function LoginForm() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const token = await userCredential.user.getIdToken();
 
-      await axios.post('http://localhost:5000/api/users/login', 
+      await axios.post(`${API_URL}/api/users/login`, 
         { name: "Shahnawaz Shaikh" }, 
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -49,7 +50,7 @@ export function LoginForm() {
       const result = await signInWithPopup(auth, provider);
       const token = await result.user.getIdToken();
       console.log("Token generated:", token); 
-      await axios.post('http://localhost:5000/api/users/login', 
+      await axios.post(`${API_URL}/api/users/login`, 
         { name: result.user.displayName }, 
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -92,12 +93,12 @@ export function LoginForm() {
                   <Label htmlFor="password">Password</Label>
                   <a href="#" className="ml-auto text-sm underline">Forgot password?</a>
                 </div>
-                <Input 
-                  id="password" 
-                  type="password" 
+                <Input
+                  id="password"
+                  type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)} // Bind state
-                  required 
+                  required
                 />
               </div>
             </div>
