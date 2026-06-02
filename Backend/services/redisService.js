@@ -7,32 +7,45 @@ const { HfInference } = require('@huggingface/inference');
 const hfToken = process.env.HF_TOKEN ? process.env.HF_TOKEN.trim() : '';
 const hf = new HfInference(hfToken);
 
-const redisClient = createClient({
-    url: process.env.REDIS_URL || 'redis://localhost:6379'
-});
-redisClient.on('error', (err) => console.log('Redis Client Error', err));
+let redisClient;
+if (process.env.REDIS_URL) {
+    redisClient = createClient({
+        url: process.env.REDIS_URL
+    });
+    redisClient.on('error', (err) => console.log('Redis Client Error', err));
 
-// Connect to Redis immediately
-(async () => {
-    try {
-        await redisClient.connect();
-        console.log("Connected to Redis in service");
-    } catch (err) {
-        console.error("Redis Connection Failed in service", err);
-    }
-})();
+    // Connect to Redis immediately
+    (async () => {
+        try {
+            await redisClient.connect();
+            console.log("Connected to Redis in service");
+        } catch (err) {
+            console.error("Redis Connection Failed in service", err);
+        }
+    })();
+} else {
+    console.warn("REDIS_URL not configured. Redis rate-limiting is disabled.");
+}
 
 
 
 async function checkRateLimit(userId) {
-    const key = `limit:${userId}`;
-    const count = await redisClient.incr(key);
-
-    if (count === 1) {
-        await redisClient.expire(key, 3600);
+    if (!redisClient) {
+        return true; // Bypass rate limiting if Redis is not configured
     }
+    try {
+        const key = `limit:${userId}`;
+        const count = await redisClient.incr(key);
 
-    return count <= 5;
+        if (count === 1) {
+            await redisClient.expire(key, 3600);
+        }
+
+        return count <= 5;
+    } catch (err) {
+        console.error("Error checking rate limit in Redis:", err);
+        return true; // Fallback to allowing request on Redis error
+    }
 }
 
 const classifyCivicIssue = async (imageInput) => {
