@@ -45,16 +45,16 @@ export default function HistoryOfReports() {
               <CardContent className="p-0 flex flex-col md:flex-row">
                 {/* Small preview image */}
                 <img
-                  src={report.imageUrl ? (report.imageUrl.startsWith("http://") || report.imageUrl.startsWith("https://") ? report.imageUrl : `${import.meta.env.VITE_API_URL}${report.imageUrl}`) : "/placeholder-image.jpg"}
+                  src={report.imageUrl ? (report.imageUrl.startsWith("http://") || report.imageUrl.startsWith("https://") ? report.imageUrl : `${import.meta.env.VITE_API_URL}${report.imageUrl}`) : "https://placehold.co/600x400?text=No+Image+Available"}
                   className="w-full md:w-48 h-32 object-cover"
                   alt="Issue"
-                  onError={(e) => { e.target.src = "/placeholder-image.jpg"; }}
+                  onError={(e) => { e.target.src = "https://placehold.co/600x400?text=No+Image+Available"; }}
                 />
 
                 <div className="p-4 flex-1 flex flex-col justify-between">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="font-bold text-lg capitalize">{report.label || "Pending AI Analysis"}</h3>
+                      <h3 className="font-bold text-lg capitalize">{report.aiClassification?.label || "Pending AI Analysis"}</h3>
                       <p className="text-sm text-muted-foreground line-clamp-1">{report.description}</p>
                     </div>
                     <Badge 

@@ -31,8 +31,8 @@ if (process.env.REDIS_URL) {
 
 async function checkRateLimit(userId) {
     if (!redisClient || !redisClient.isOpen) {
-        console.error("Redis is not connected. Rate limiting cannot be verified. Blocking request for safety.");
-        return false; // Fail closed: block request if rate limiting is not operational
+        console.warn("Redis is not connected. Rate limiting cannot be verified. Allowing request (failing open).");
+        return true; // Fail open: allow request if rate limiting is not operational
     }
     try {
         const key = `limit:${userId}`;
@@ -44,8 +44,8 @@ async function checkRateLimit(userId) {
 
         return count <= 5;
     } catch (err) {
-        console.error("Error checking rate limit in Redis:", err);
-        return false; // Fail closed on error
+        console.error("Error checking rate limit in Redis (failing open):", err);
+        return true; // Fail open on error
     }
 }
 
@@ -71,11 +71,17 @@ const classifyCivicIssue = async (imageInput) => {
             throw new Error("No image data provided for AI classification.");
         }
 
-        // 2. Use the official library method
-        const result = await hf.imageClassification({
+        // 2. Use the official library method with a timeout
+        const classificationPromise = hf.imageClassification({
             data: blobData,
             model: "apple/mobilevit-xx-small",
         });
+
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Hugging Face API request timed out")), 8000)
+        );
+
+        const result = await Promise.race([classificationPromise, timeoutPromise]);
 
         console.log("AI Result:", result[0]);
 

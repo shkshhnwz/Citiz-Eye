@@ -59,17 +59,17 @@ const Feed = () => {
                             {/* Image with fallback logic */}
                             <div className="aspect-video w-full bg-muted relative">
                                 <img
-                                    src={report.imageUrl ? (report.imageUrl.startsWith("http://") || report.imageUrl.startsWith("https://") ? report.imageUrl : `${API_BASE_URL}${report.imageUrl}`) : "/placeholder-image.jpg"}
+                                    src={report.imageUrl ? (report.imageUrl.startsWith("http://") || report.imageUrl.startsWith("https://") ? report.imageUrl : `${API_BASE_URL}${report.imageUrl}`) : "https://placehold.co/600x400?text=No+Image+Available"}
                                     alt={report.description || "Report Image"}
                                     className="object-cover w-full h-full"
-                                    onError={(e) => { e.target.src = "/placeholder-image.jpg"; }} // Handle broken images
+                                    onError={(e) => { e.target.src = "https://placehold.co/600x400?text=No+Image+Available"; }} // Handle broken images
                                 />
                             </div>
 
                             <CardHeader className="p-4">
                                 <div className="flex justify-between items-start">
                                     <CardTitle className="text-lg font-semibold capitalize">
-                                        {report.label || "Unclassified Issue"}
+                                        {report.aiClassification?.label || "Unclassified Issue"}
                                     </CardTitle>
                                     <Badge 
                                         className={`capitalize border ${

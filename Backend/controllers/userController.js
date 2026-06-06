@@ -36,6 +36,7 @@ const loginUser = async (req, res, next) => {
       }
     })
   } catch (err) {
+    console.error("Error in loginUser:", err);
     res.status(500).json({ message: "Server Error during login" });
   }
 }
@@ -73,6 +74,7 @@ const getProfile = async (req, res, next) => {
 
     return res.status(404).json({ message: "User not found" });
   } catch (err) {
+    console.error("Error in getProfile:", err);
     res.status(500).json({ message: "Server Error fetching profile" });
   }
 }

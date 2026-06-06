@@ -297,10 +297,10 @@ export default function AdminDashboard() {
                 {/* Image */}
                 <div className="w-full lg:w-48 h-36 bg-muted rounded-xl overflow-hidden relative shrink-0">
                   <img 
-                    src={c.imageUrl ? (c.imageUrl.startsWith("http://") || c.imageUrl.startsWith("https://") ? c.imageUrl : `${API_URL}${c.imageUrl}`) : "/placeholder-image.jpg"}
+                    src={c.imageUrl ? (c.imageUrl.startsWith("http://") || c.imageUrl.startsWith("https://") ? c.imageUrl : `${API_URL}${c.imageUrl}`) : "https://placehold.co/600x400?text=No+Image+Available"}
                     alt="Complaint Evidence"
                     className="object-cover w-full h-full"
-                    onError={(e) => { e.target.src = "/placeholder-image.jpg"; }}
+                    onError={(e) => { e.target.src = "https://placehold.co/600x400?text=No+Image+Available"; }}
                   />
                   
                   {/* AI Prediction Overlays */}

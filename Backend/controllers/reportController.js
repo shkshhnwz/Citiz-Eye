@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const { checkRateLimit, classifyCivicIssue } = require('../services/redisService');
 const { sendEmail } = require('../services/emailService');
-const storageService = require('../services/storageService');
+const cloudinaryService = require('../services/cloudinaryService');
 
 exports.createReport = async (req, res, next) => {
 
@@ -40,18 +40,16 @@ exports.createReport = async (req, res, next) => {
         let savedImageUrl = imageUrl;
 
         const aiService = await classifyCivicIssue(targetImage);
-
+        let isUploadtoCloudinary = false;
         if (req.file) {
-            if (storageService.isStorageConfigured()) {
+            savedImageUrl = `/uploads/${req.file.filename}`;
+            if (cloudinaryService.isStorageConfigured()) {
                 try {
-                    const destination = `reports/${Date.now()}-${req.file.filename}`;
-                    savedImageUrl = await storageService.uploadToFirebaseStorage(localFilePath, destination);
+                    savedImageUrl = await cloudinaryService.uploadToCloudinary(localFilePath);
+                    isUploadtoCloudinary = true;
                 } catch (storageError) {
-                    console.error("Firebase Storage upload failed, falling back to local file path:", storageError);
-                    savedImageUrl = `/uploads/${req.file.filename}`;
+                    console.error("Cloudinary upload failed, falling back to local file path:", storageError);
                 }
-            } else {
-                savedImageUrl = `/uploads/${req.file.filename}`;
             }
         }
 
@@ -74,19 +72,23 @@ exports.createReport = async (req, res, next) => {
             imagePath: savedImageUrl
         };
 
-        try {
-            await sendEmail(reportData, localFilePath);
-        } catch (emailError) {
-            console.error("Failed to send notification email:", emailError);
-        }
-
-        // Clean up temporary local upload if uploaded to Firebase Storage
-        if (req.file && storageService.isStorageConfigured() && fs.existsSync(localFilePath)) {
-            fs.unlink(localFilePath, (err) => {
-                if (err) console.error("Error deleting temporary local file:", err);
-                else console.log("Temporary local file cleaned up successfully.");
-            });
-        }
+        // Send email and clean up local file asynchronously in the background
+        const sendEmailAndCleanup = async () => {
+            try {
+                await sendEmail(reportData, localFilePath);
+            } catch (emailError) {
+                console.error("Failed to send notification email asynchronously:", emailError);
+            } finally {
+                // Clean up temporary local upload if uploaded to Firebase Storage
+                if (req.file && isUploadtoCloudinary && fs.existsSync(localFilePath)) {
+                    fs.unlink(localFilePath, (err) => {
+                        if (err) console.error("Error deleting temporary local file:", err);
+                        else console.log("Temporary local file cleaned up successfully.");
+                    });
+                }
+            }
+        };
+        sendEmailAndCleanup(); // Non-blocking background call
 
         res.status(201).json({
             success: true,
@@ -101,9 +103,7 @@ exports.createReport = async (req, res, next) => {
 
 exports.getAllreports = async (req, res, next) => {
     try {
-        const reports = await Report.find({
-            "aiClassification.label": { $exists: true, $ne: "unclassified" }
-        }).sort({ createdAt: -1 });
+        const reports = await Report.find().sort({ createdAt: -1 });
         res.status(200).json({
             success: true,
             data: reports

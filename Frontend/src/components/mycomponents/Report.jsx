@@ -93,6 +93,7 @@ const ReportForm = () => {
                     "Authorization": `Bearer ${token}`
                 },
             });
+            alert("Report submitted successfully!");
             // Reset after success
             setFile(null);
             setImageUrl("");
@@ -103,6 +104,7 @@ const ReportForm = () => {
             setAddress("");
         } catch (err) {
             console.error("Upload error", err);
+            alert("Failed to submit report: " + (err.response?.data?.message || err.message));
         } finally {
             setLoading(false);
         }
