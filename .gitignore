@@ -7,6 +7,9 @@ node_modules/
 *.postman_environment.json
 Postman/
 
+# Temporary Uploads
+Backend/uploads/
+
 # --- Environment Secrets (The actual keys) ---
 .env
 **/.env
