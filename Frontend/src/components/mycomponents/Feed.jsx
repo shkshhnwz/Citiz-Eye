@@ -57,7 +57,7 @@ const Feed = () => {
                     reports.map((report) => (
                         <Card key={report._id} className="overflow-hidden hover:shadow-lg transition-shadow">
                             {/* Image with fallback logic */}
-                            <div className="aspect-video w-full bg-muted relative">
+                            <div className="h-48 w-full bg-muted relative overflow-hidden">
                                 <img
                                     src={report.imageUrl ? (report.imageUrl.startsWith("http://") || report.imageUrl.startsWith("https://") ? report.imageUrl : `${API_BASE_URL}${report.imageUrl}`) : "https://placehold.co/600x400?text=No+Image+Available"}
                                     alt={report.description || "Report Image"}

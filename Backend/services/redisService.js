@@ -49,14 +49,16 @@ async function checkRateLimit(userId) {
     }
 }
 
-const classifyCivicIssue = async (imageInput) => {
+const classifyCivicIssue = async (imageInput, description = "") => {
     try {
         let blobData;
         if (imageInput && imageInput.path) {
             // Read local file uploaded via multer
             const fs = require('fs');
             const buffer = fs.readFileSync(imageInput.path);
-            blobData = new Blob([buffer]);
+            blobData = new Blob([buffer],{
+                type: imageInput.mimetype
+            });
         } else if (typeof imageInput === 'string' && imageInput.trim() !== '') {
             // Fetch from URL
             const url = imageInput.trim();
@@ -78,7 +80,7 @@ const classifyCivicIssue = async (imageInput) => {
         });
 
         const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Hugging Face API request timed out")), 8000)
+            setTimeout(() => reject(new Error("Hugging Face API request timed out")), 20000)
         );
 
         const result = await Promise.race([classificationPromise, timeoutPromise]);
@@ -86,7 +88,7 @@ const classifyCivicIssue = async (imageInput) => {
         console.log("AI Result:", result[0]);
 
         return {
-            label: result[0].label,
+            label:mapLabelToCivicIssue(result[0].label, description),
             score: result[0].score
         };
 
@@ -95,4 +97,84 @@ const classifyCivicIssue = async (imageInput) => {
         return { label: "unclassified", score: 0 };
     }
 };
+const mapLabelToCivicIssue = (rawLabel, description = "") => {
+    // 1. Check description text keywords first
+    if (description) {
+        const desc = description.toLowerCase();
+        if (desc.includes("garbage") || desc.includes("trash") || desc.includes("waste") || desc.includes("rubbish") || desc.includes("dump") || desc.includes("litter")) {
+            return "garbage";
+        }
+        if (desc.includes("water log") || desc.includes("waterlog") || desc.includes("flood") || desc.includes("puddle") || desc.includes("rain")) {
+            return "waterlogging";
+        }
+        if (desc.includes("pothole") || desc.includes("road damage") || desc.includes("bad road") || desc.includes("crack")) {
+            return "pothhole";
+        }
+        if (desc.includes("streetlight") || desc.includes("street light") || desc.includes("lamp") || desc.includes("no light")) {
+            return "streetlight";
+        }
+        if (desc.includes("traffic") || desc.includes("jam") || desc.includes("roadblock") || desc.includes("congestion")) {
+            return "traffic";
+        }
+    }
+
+    // 2. Fall back to image classification labels if description didn't match
+    if (!rawLabel) return "other";
+    
+    const label = rawLabel.toLowerCase();
+    
+    // Keywords for waterlogging
+    const waterKeywords = [
+        "water", "puddle", "lake", "pond", "river", "sea", "ocean", 
+        "dock", "seashore", "lakeside", "lakeshore", "flood", "rain", 
+        "canal", "channel", "swimming pool", "dam", "dike", "dyke", 
+        "sewer", "amphibian", "amphibious"
+    ];
+    
+    // Keywords for garbage
+    const garbageKeywords = [
+        "garbage", "trash", "waste", "rubbish", "ashcan", "dustbin", 
+        "landfill", "pile", "scrap", "crate", "carton", "junk", 
+        "plastic bag", "street cleaner", "bucket", "can", "tin", "packet", "bag"
+    ];
+    
+    // Keywords for pothhole
+    const roadKeywords = [
+        "pothole", "crack", "hole", "asphalt", "pavement", "dirt road", 
+        "unpaved", "gravel", "mud", "soil", "earth", "stone", "rock", 
+        "cliff", "sand"
+    ];
+    
+    // Keywords for streetlight
+    const lightKeywords = [
+        "streetlight", "street lamp", "lantern", "light", "lamp", "torch", "pole"
+    ];
+    
+    // Keywords for traffic
+    const trafficKeywords = [
+        "traffic", "car", "truck", "bus", "vehicle", "motorcycle", "bike", 
+        "cab", "limo", "highway", "intersection", "congestion", "roadblock", 
+        "barrier"
+    ];
+
+    if (waterKeywords.some(keyword => label.includes(keyword))) {
+        return "waterlogging";
+    }
+    if (garbageKeywords.some(keyword => label.includes(keyword))) {
+        return "garbage";
+    }
+    if (roadKeywords.some(keyword => label.includes(keyword))) {
+        return "pothhole";
+    }
+    if (lightKeywords.some(keyword => label.includes(keyword))) {
+        return "streetlight";
+    }
+    if (trafficKeywords.some(keyword => label.includes(keyword))) {
+        return "traffic";
+    }
+    
+    return "other";
+};
+
+
 module.exports = { checkRateLimit, classifyCivicIssue };
